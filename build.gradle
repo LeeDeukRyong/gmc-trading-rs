@@ -1,0 +1,135 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.2'
+    id 'io.spring.dependency-management' version '1.0.12.RELEASE'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id "org.sonarqube" version '3.4.0.2513'
+    id 'jacoco'
+    id 'java'
+}
+
+repositories {
+    maven {
+        credentials {
+            username 'xxx'
+            password 'xxx'
+        }
+        url 'https://repo.gmc-labs.com/repository/maven-public'
+    }
+    mavenCentral()
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+ext {
+    set('appName', 'gmc-trading-rs')
+    set('snippetsDir', file('build/generated-snippets'))
+    set('springCloudVersion', "2021.0.3")
+}
+
+sourceCompatibility = '19'
+targetCompatibility = '19'
+
+dependencies {
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation('org.springframework.boot:spring-boot-starter-web') {
+        exclude module: 'spring-boot-starter-tomcat'
+    }
+    implementation('org.springframework.boot:spring-boot-starter-undertow') {
+        exclude group: 'io.undertow', module: 'undertow-websockets-jsr'
+    }
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // DB
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.2'
+    runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16'
+    implementation 'org.flywaydb:flyway-core'
+
+    // Cache
+    implementation 'org.redisson:redisson-spring-boot-starter:3.18.0' // spring boot 2.7.2 버전
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.ehcache:ehcache'
+    implementation 'javax.cache:cache-api:1.1.1'
+
+    // Logstash
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.2'
+    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
+    implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
+
+    // shedlock
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:4.42.0'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-redis-spring:4.42.0'
+
+    // upbit token 생성용
+    // https://mvnrepository.com/artifact/com.auth0/java-jwt
+    implementation 'com.auth0:java-jwt:4.2.1'
+    // bitmart token 생성용
+    implementation 'commons-codec:commons-codec:1.15'
+
+    // Library
+    implementation files('../gmc-common-library/build/libs/gmc-common-library-plain.jar')
+    implementation 'com.gmc-labs:gmc-common-library:1.0.193'
+    implementation 'org.apache.commons:commons-collections4:4.4'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+test {
+    useJUnitPlatform()
+    outputs.dir snippetsDir
+    finalizedBy 'jacocoTestReport'
+}
+
+asciidoctor {
+    baseDirFollowsSourceDir()
+    attributes 'snippets': snippetsDir
+    dependsOn test
+}
+
+bootJar {
+    archiveFileName = 'app.jar'
+    copy {
+        from "${asciidoctor.outputDir}"
+        into 'BOOT-INF/classes/static/docs'
+    }
+    dependsOn asciidoctor
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "gmc-trading-rs"
+        property "sonar.qualitygate.wait", true
+        property "sonar.junit.reportsPath", "build/reports/tests"
+        property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.exclusions", "*/Application.java, **/config/*.java, **/dto/*.java, **/domain/*.java, **/infra/*.java"
+    }
+}
+
+jacocoTestReport {
+    reports.xml
+}

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <springProperty scope="context" name="service" source="spring.application.name" />
+  <springProperty scope="context" name="profile" source="spring.config.activate.on-profile" />
+
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>
+        %clr(%d{yyyy-MM-dd HH:mm:ss.SSS}]){faint} %clr(%5p): %clr(${PID:- }){magenta} %clr([%X{traceId:-},%X{spanId:-}]){yellow} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx
+      </pattern>
+    </encoder>
+  </appender>
+
+  <appender name="k8s" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp/>
+        <context/>
+        <logLevel/>
+        <message/>
+        <loggerName/>
+        <threadName/>
+        <context/>
+        <stackTrace/>
+        <callerData>
+          <classFieldName>class</classFieldName>
+          <methodFieldName>method</methodFieldName>
+          <lineFieldName>line</lineFieldName>
+          <fileFieldName>file</fileFieldName>
+        </callerData>
+        <pattern>
+          <omitEmptyFields>true</omitEmptyFields>
+        </pattern>
+        <mdc/>
+      </providers>
+    </encoder>
+  </appender>
+
+  <logger name="jdbc" level="OFF"/>
+  <logger name="jdbc.sqlonly" level="OFF"/>
+  <logger name="jdbc.audit" level="OFF"/>
+  <logger name="jdbc.resultset" level="OFF"/>
+  <logger name="jdbc.connection" level="OFF"/>
+
+  <logger name="org.springframework" level="INFO"/>
+  <logger name="com.gmc" level="INFO"/>
+  <logger name="org.springframework.web.filter" level="DEBUG"/>
+  <logger name="org.springframework.web.client.RestTemplate" level="DEBUG"/>
+
+  <!-- 로컬 환경 -->
+  <springProfile name="default">
+    <logger name="jdbc.sqltiming" level="DEBUG"/>
+    <logger name="jdbc.resultsettable" level="DEBUG"/>
+
+    <root level="INFO">
+      <appender-ref ref="console"/>
+    </root>
+  </springProfile>
+
+  <!-- 개발 환경 -->
+  <springProfile name="development">
+    <root level="INFO">
+      <appender-ref ref="k8s"/>
+    </root>
+  </springProfile>
+
+  <!-- 스테이징 환경 -->
+  <springProfile name="staging">
+    <root level="INFO">
+      <appender-ref ref="k8s"/>
+    </root>
+  </springProfile>
+
+  <!-- 운영 환경 -->
+  <springProfile name="production">
+    <root level="ERROR">
+      <appender-ref ref="k8s"/>
+    </root>
+  </springProfile>
+</configuration>

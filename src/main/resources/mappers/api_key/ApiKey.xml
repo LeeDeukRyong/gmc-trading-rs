@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gmc.trading.modules.api_key.infra.ApiKeyMapper">
+  <resultMap id="searchApiKey" type="ApiKeySearchResponse">
+    <id property="id" column="id"></id>
+    <result property="keyName" column="keyName"></result>
+    <result property="accessKey" column="accessKey"></result>
+    <result property="secretKey" column="secretKey"></result>
+    <result property="passPhrase" column="passPhrase"></result>
+    <result property="expireDt" column="expireDt"></result>
+    <result property="userId" column="userId"></result>
+    <result property="email" column="email"></result>
+    <result property="userNm" column="userNm"></result>
+    <result property="operatorId" column="operatorId"></result>
+    <result property="centerId" column="centerId"></result>
+    <result property="exchangeId" column="exchangeId"></result>
+    <result property="exchangeCode" column="exchangeCode"></result>
+    <result property="createdBy" column="createdBy"></result>
+    <result property="createdOn" column="createdOn"></result>
+    <collection property="bots" ofType="BotSearchResponse">
+      <id property="id" column="botId"></id>
+      <id property="marketType" column="marketType"></id>
+      <id property="marketCode" column="marketCode"></id>
+      <id property="coinCode" column="coinCode"></id>
+      <id property="coinNm" column="coinNm"></id>
+    </collection>
+  </resultMap>
+
+  <select id="searchApiKeyList" resultMap="searchApiKey">
+    SELECT ak.id
+    ,ak.key_name AS keyName
+    ,ak.access_key AS accessKey
+    ,ak.secret_key AS secretKey
+    ,ak.pass_phrase AS passPhrase
+    ,ak.expire_dt AS expireDt
+    ,a.user_id AS userId
+    ,a.email
+    ,a.user_nm AS userNm
+    ,a.operator_id AS operatorId
+    ,a.center_id AS centerId
+    ,e.id AS exchangeId
+    ,e.code AS exchangeCode
+    ,ak.created_by AS createdBy
+    ,ak.created_on AS createdOn
+    <if test="userId != null">
+    ,b.id AS botId
+    ,m.market_type AS marketType
+    ,m.code AS marketCode
+    ,c.code AS coinCode
+    ,c.coin_nm AS coinNm
+    </if>
+    FROM tt_api_key ak
+    INNER JOIN tt_account a ON ak.user_id = a.user_id
+    INNER JOIN tt_exchange e ON ak.exchange_id = e.id
+    <if test="useYn != null">
+      AND e.use_yn = #{useYn}
+    </if>
+    <if test="userId != null">
+      LEFT OUTER JOIN tt_bot b ON ak.id = b.api_key_id AND b.del_yn = 'N'
+      LEFT OUTER JOIN tt_coin c ON b.coin_id = c.id
+      LEFT OUTER JOIN tt_market m ON c.market_id = m.id
+    </if>
+    <where>
+      <if test="keyName != null and keyName != ''">
+        AND ak.key_name LIKE '%' || #{keyName} || '%'
+      </if>
+      <if test="accessKey != null and accessKey != ''">
+        AND ak.access_key = #{accessKey}
+      </if>
+      <if test="expireDt != null">
+        AND ak.expire_dt = #{expireDt}
+      </if>
+      <if test="operatorId != null">
+        AND a.operator_id = #{operatorId}
+      </if>
+      <if test="centerId != null">
+        AND a.center_id = #{centerId}
+      </if>
+      <if test="userId != null">
+        AND a.user_id = #{userId}
+      </if>
+      <if test="email != null and email != ''">
+        AND a.email like '%' || #{email} || '%'
+      </if>
+      <if test="userNm != null and userNm != ''">
+        AND a.user_nm like '%' || #{userNm} || '%'
+      </if>
+      <if test="exchangeId != null">
+        AND e.id = #{exchangeId}
+      </if>
+      <if test="createdBy != null and createdBy != ''">
+        AND ak.created_by = #{createdBy}
+      </if>
+      <if test="fromCreatedOn != null and toCreatedOn != null">
+        AND ak.created_on AT TIME ZONE #{zoneId} BETWEEN #{fromCreatedOn} AND #{toCreatedOn}
+      </if>
+    </where>
+  </select>
+</mapper>

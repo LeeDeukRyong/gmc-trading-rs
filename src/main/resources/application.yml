@@ -1,0 +1,176 @@
+spring:
+  application:
+    name: gmc-trading-rs
+  zipkin:
+    enabled: off # zipkin 관련 설치 후 삭제
+    baseUrl: ${ZIPKIN_BASE_URL:https://trace.gmc-labs.com}
+  main:
+    banner-mode: off
+  devtools:
+    livereload:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: com.gmc.trading.infra.strategy.PhysicalNamingStrategy
+    database: postgresql
+    open-in-view: false
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:log4jdbc:postgresql://db주소/trading}
+    username: ${DATASOURCE_USERNAME:xxx}
+    password: ${DATASOURCE_PASSWORD:xxx}
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    hikari:
+      maximum-pool-size: 5 # default 10
+      minimum-idle: 1 # default maximum-pool-size
+      connection-test-query: select 1
+      max-lifetime: 1800000
+  flyway:
+    enabled: ${FLYWAY_ENABLED:false}
+    baseline-on-migrate: true
+    baseline-version: 0
+    fail-on-missing-locations: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      repositories:
+        enabled: false
+  redis:
+    host: ${REDIS_HOST:레디스주소}
+    port: ${REDIS_PORT:6379}
+    timeout: ${REDIS_TIMEOUT:10m} #(ns, us, ms, s, m, h, d) //나노초, 마이크로초, 밀리초, 초, 분, 시, 일
+  redis-coin:
+    host: ${REDIS_COIN_HOST:레디스주소}
+    port: ${REDIS_COIN_PORT:6379}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${OAUTH2_ISSUER_URI:https://oauth2-dev.gmc-labs.com/.well-known/jwks.json}
+      client:
+        registration:
+          gmc:
+            provider: gmc
+            client-id: ${OAUTH2_CLIENT_ID:xxx}
+            client-secret: ${OAUTH2_CLIENT_SECRET:xxx}
+            authorization-grant-type: client_credentials
+        provider:
+          gmc:
+            token-uri: ${OAUTH2_TOKEN_URI:https://oauth2-dev.gmc-labs.com/oauth/token}
+
+mybatis:
+  configuration:
+    cache-enabled: false
+    default-statement-timeout: 30
+    jdbc-type-for-null: NULL
+    call-setters-on-nulls: true
+    map-underscore-to-camel-case: true
+  type-aliases-package: com.gmc.trading.modules
+  type-handlers-package: com.gmc.common.code.converter
+  mapper-locations: mappers/**/*.xml
+
+server:
+  forward-headers-strategy: native # X-Forward 해더를 사용
+  servlet:
+    context-path: /trading
+  port: 8080
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics, scheduledtasks
+  endpoint:
+    health:
+      show-details: always
+  server:
+    port: 8090
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+scheduler:
+  botMonitoring:
+    fixedDelaySecond: ${SCHEDULER_BOT_MONITORING_FIXED_DELAY_SECOND:3}
+  volumeBotMonitoring:
+    fixedDelaySecond: ${SCHEDULER_VOLUME_BOT_MONITORING_FIXED_DELAY_SECOND:3}
+  gridBotMonitoring:
+    fixedDelaySecond: ${SCHEDULER_GRID_BOT_MONITORING_FIXED_DELAY_SECOND:3}
+  listBotMonitoring:
+    fixedDelaySecond: ${SCHEDULER_LIST_BOT_MONITORING_FIXED_DELAY_SECOND:3}
+  buyBotMonitoring:
+    fixedDelaySecond: ${SCHEDULER_BUY_BOT_MONITORING_FIXED_DELAY_SECOND:3}
+  sellBotMonitoring:
+    fixedDelaySecond: ${SCHEDULER_SELL_BOT_MONITORING_FIXED_DELAY_SECOND:3}
+  arbitrageBotMonitoring:
+    fixedDelaySecond: ${SCHEDULER_ARBITRAGE_BOT_MONITORING_FIXED_DELAY_SECOND:3}
+system:
+  date-format: ${SYSTEM_DATE_FORMAT:yyyy-MM-dd}
+  api:
+    gmc:
+      admin:
+        url: ${API_GMC_ADMIN_URL:https://apis-dev.gmc-labs.com/admin}
+      point:
+        url: ${API_GMC_POINT_URL:https://apis-dev.gmc-labs.com/point}
+      mms:
+        url: ${API_GMC_MMS_URL:https://apis-dev.gmc-labs.com/mms}
+      gap:
+        url: ${API_GMC_GAP_URL:https://apis-dev.gmc-labs.com/gap}
+    upbit:
+      url: ${API_UPBIT_URL:https://api.upbit.com}
+    okx:
+      url: ${API_OKX_URL:https://aws.okx.com}
+      broker: ${API_OKX_BROKER:xxx}
+    probit:
+      url: ${API_PROBIT_URL:https://api.probit.com}
+      token-url: ${API_PROBIT_TOKEN_URL:https://accounts.probit.com/token}
+    bitmart:
+      url: ${API_BITMART_URL:https://api-cloud.bitmart.com}
+    mexc:
+      url: ${API_MEXC_URL:https://api.mexc.com}
+    amb:
+      url: ${API_AMB_URL:https://api.almostbank.com}
+    binance:
+      url: ${API_BINANCE_URL:https://api.binance.com}
+  slack:
+    url: ${SLACK_URL:슬랙주소}
+    channel: ${CHANNEL:trading-dev}
+  restTemplate:
+    connection-time-out: ${RESTTEMPLATE_CONNECTION_TIME_OUT:15}
+    read-time-out: ${RESTTEMPLATE_READ_TIME_OUT:30}
+---
+spring:
+  config:
+    activate:
+      on-profile: default # 로컬환경
+  flyway:
+    enabled: true
+
+server:
+  port: 8003
+
+management:
+  server:
+    port: -1
+
+system:
+  slack:
+    url:
+    channel:
+---
+spring:
+  config:
+    activate:
+      on-profile: development
+---
+spring:
+  config:
+    activate:
+      on-profile: staging
+---
+spring:
+  config:
+    activate:
+      on-profile: production
