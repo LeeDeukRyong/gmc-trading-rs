@@ -3,7 +3,7 @@ spring:
     name: gmc-trading-rs
   zipkin:
     enabled: off # zipkin 관련 설치 후 삭제
-    baseUrl: ${ZIPKIN_BASE_URL:https://trace.gmc-labs.com}
+    baseUrl: ${ZIPKIN_BASE_URL:https://xxx}
   main:
     banner-mode: off
   devtools:
@@ -47,7 +47,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${OAUTH2_ISSUER_URI:https://oauth2-dev.gmc-labs.com/.well-known/jwks.json}
+          jwk-set-uri: ${OAUTH2_ISSUER_URI:https://xxx/.well-known/jwks.json}
       client:
         registration:
           gmc:
@@ -57,7 +57,7 @@ spring:
             authorization-grant-type: client_credentials
         provider:
           gmc:
-            token-uri: ${OAUTH2_TOKEN_URI:https://oauth2-dev.gmc-labs.com/oauth/token}
+            token-uri: ${OAUTH2_TOKEN_URI:https://xxx/oauth/token}
 
 mybatis:
   configuration:
@@ -66,8 +66,8 @@ mybatis:
     jdbc-type-for-null: NULL
     call-setters-on-nulls: true
     map-underscore-to-camel-case: true
-  type-aliases-package: com.gmc.trading.modules
-  type-handlers-package: com.gmc.common.code.converter
+  type-aliases-package: com.xxx.trading.modules
+  type-handlers-package: com.xxx.common.code.converter
   mapper-locations: mappers/**/*.xml
 
 server:
@@ -111,13 +111,13 @@ system:
   api:
     gmc:
       admin:
-        url: ${API_GMC_ADMIN_URL:https://apis-dev.gmc-labs.com/admin}
+        url: ${API_GMC_ADMIN_URL:https://xxx/admin}
       point:
-        url: ${API_GMC_POINT_URL:https://apis-dev.gmc-labs.com/point}
+        url: ${API_GMC_POINT_URL:https://xxx/point}
       mms:
-        url: ${API_GMC_MMS_URL:https://apis-dev.gmc-labs.com/mms}
+        url: ${API_GMC_MMS_URL:https://xxx/mms}
       gap:
-        url: ${API_GMC_GAP_URL:https://apis-dev.gmc-labs.com/gap}
+        url: ${API_GMC_GAP_URL:https://xxx/gap}
     upbit:
       url: ${API_UPBIT_URL:https://api.upbit.com}
     okx:
